@@ -6,34 +6,25 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Start server
+        run: npm run dev &
 
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@v2
+      - name: Wait for server to start
+        run: sleep 10
+
+      - name: Deploy website
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: build-artifacts
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build-artifacts
-          path: dist
-
-      - name: Deploy to hosting environment
-        # run: npm run deploy
-        run: npm run start
+          github_token: ${{ secrets.ACTION_TOKEN }}
+          publish_dir: ./
+          cname: example.com # Replace with your custom domain, if applicable
